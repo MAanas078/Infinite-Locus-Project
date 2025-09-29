@@ -1,16 +1,17 @@
 import React, { useEffect } from "react";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { ToastContainer } from 'react-toastify';
-import Signup from "./Components/Signup";
-import Login from "./Components/Login";
-import LostItems from "./Components/LostItems";
-import FoundItems from "./Components/FoundItems";
-import Home from "./Components/Home";
-import ItemPage from "./Components/ItemPage";
-import LostItem from "./Components/Lost_item";
-import MyListings from "./Components/MyListings";
-import Admin from "./Components/Admin";
-import Layout from "./layout"; 
+import Signup from "./components/Signup.js";
+import Login from "./components/Login.js";
+import LostItems from "./components/LostItems.js";
+import FoundItems from "./components/FoundItems.js";
+import Home from "./components/Home.js";
+import ItemPage from "./components/ItemPage.js";
+import LostItem from "./components/Lost_item.js";
+import MyListings from "./components/MyListings.js";
+import Admin from "./components/Admin.js";
+import Layout from "./layout.js"; 
+
 window.OneSignal = window.OneSignal || [];
 const OneSignal = window.OneSignal;
 function App() {
