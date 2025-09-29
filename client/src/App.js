@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import React from "react";
+import { BrowserRouter, Route, Routes} from "react-router-dom";
 import { ToastContainer } from 'react-toastify';
 import Signup from "./components/Signup.js";
 import Login from "./components/Login.js";
@@ -13,7 +13,7 @@ import Admin from "./components/Admin.js";
 import Layout from "./layout.js"; 
 
 window.OneSignal = window.OneSignal || [];
-const OneSignal = window.OneSignal;
+
 function App() {
  
   
