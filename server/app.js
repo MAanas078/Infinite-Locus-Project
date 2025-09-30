@@ -43,5 +43,8 @@ app.use('/Items', ItemRoutes)
 const port = process.env.PORT || 4000;
 const db = process.env.DB;
 
+// to surpass the warning
+mongoose.set('strictQuery', true);
+
 mongoose.connect(db,{ useNewUrlParser: true, useUnifiedTopology: true }).then(() => app.listen(port,() => console.log('Connection done and running on PORT :'+ port))).catch((err) => console.log(err.message));
 
