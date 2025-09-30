@@ -26,6 +26,11 @@ A Lost & Found Management System where:
 
 
 ---
+##For Admin Login
+- Email- admin@admin.com
+- Pass- admin@123
+
+---
 
 ## ⚙️ Tech Stack
 - **Backend:** Node.js + Express
