@@ -1,9 +1,9 @@
 import express from 'express'
 
-import createUser from '../controllers/user/CreateUser.js'
-import { loginUser } from '../controllers/user/LoginUser.js'
-import { renewToken } from '../controllers/user/renewToken.js'
-import { updateUser } from '../controllers/user/updateUser.js'
+import createUser from '../controllers/User/CreateUser.js'
+import { loginUser } from '../controllers/User/LoginUser.js'
+import { renewToken } from '../controllers/User/renewToken.js'
+import { updateUser } from '../controllers/User/updateUser.js'
 import { validateJWT } from '../middlewares/validateToken.js'
 import {validateOtp} from "../controllers/User/ValidateOtp.js"
 import { getUsers } from '../controllers/User/TotalUser.js'
