@@ -3,7 +3,7 @@ import express from 'express'
 import createUser from '../controllers/User/CreateUser.js'
 import { loginUser } from '../controllers/User/LoginUser.js'
 import { renewToken } from '../controllers/User/renewToken.js'
-import { updateUser } from '../controllers/User/updateUser.js'
+import { updateUser } from '../controllers/User/UpdateUser.js'
 import { validateJWT } from '../middlewares/validateToken.js'
 import {validateOtp} from "../controllers/User/ValidateOtp.js"
 import { getUsers } from '../controllers/User/TotalUser.js'
