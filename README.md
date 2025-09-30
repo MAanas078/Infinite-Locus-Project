@@ -31,8 +31,8 @@ A Lost & Found Management System where:
 - **Backend:** Node.js + Express
 - **Database:** MongoDB + Mongoose
 - **Authentication:** JWT
-- **API Testing:** Postman
-- **Frontend (future):** React / Angular (Moderator Dashboard)
+- **API Testing: Postman
+- Frontend (future): React (Moderator Dashboard)
 
 ---
 
