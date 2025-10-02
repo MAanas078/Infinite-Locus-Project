@@ -4,8 +4,8 @@ const sendOtp = async (email, otp) => {
     // Using the explicit host and port is more reliable than 'service: "Gmail"'
     const transporter = nodemailer.createTransport({
         host: 'smtp.gmail.com',
-        port: 587,
-        secure: false, // true for 465, false for other ports like 587
+        port: 465,
+        secure: true, // true for 465, false for other ports like 587
         auth: {
             user: process.env.EMAIL,
             // IMPORTANT: For Gmail, you MUST use an "App Password" if 2FA is enabled.
