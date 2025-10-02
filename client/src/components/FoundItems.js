@@ -34,6 +34,7 @@ const Paginationn = ({ page, setPage, max }) => {
 };
 
 export default function FoundItems() {
+  const API_BASE_URL = process.env.REACT_APP_API_URL;
 
   const [user_info, setuser_info] = useState(
     JSON.parse(localStorage.getItem("user"))
@@ -63,7 +64,7 @@ export default function FoundItems() {
   useEffect(() => {
     
     Axios({
-      url: "http://localhost:4000/items",
+      url: `${API_BASE_URL}/items`,
       method: "GET",
     })
       .then((response) => {      
