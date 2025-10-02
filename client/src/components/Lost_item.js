@@ -25,6 +25,7 @@ import { storage } from '../firebase.js'
 import * as Yup from 'yup';
 
 const LostItem = () => {
+  const API_BASE_URL = process.env.REACT_APP_API_URL;
   const [loading, setloading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [image, setImage] = useState(null);
@@ -123,7 +124,7 @@ const LostItem = () => {
     Promise.all(promises)
       .then((urls) => {
         const newItem = { ...values, img: urls, userId: getUserId() };
-        axios.post('http://localhost:4000/Items/newItem', newItem, config)
+        axios.post(`${API_BASE_URL}/Items/newItem`, newItem, config)
           .then(() => {
             toast.success('Wohoo 🤩! Item listed successfully.', {
               position: "bottom-right",
