@@ -79,10 +79,11 @@ const StatCard = ({ title, count, icon: Icon, color }) => (
 // --- Main App Component ---
 export default function AdminDashboard() {
     // --- API Endpoints ---
-    const USER_API_URL = 'http://localhost:4000/users/get-users/';
-    const ITEMS_API_URL = 'http://localhost:4000/items/get-items'; 
+    const API_BASE_URL = process.env.REACT_APP_API_URL;
+    const USER_API_URL = `${API_BASE_URL}/users/get-users/`;
+    const ITEMS_API_URL = `${API_BASE_URL}/items/get-items`; 
     // Base URL for PATCH actions: e.g., /items/ITEM_ID/approved
-    const APPROVE_ITEM_API_BASE = 'http://localhost:4000/items/'; 
+    const APPROVE_ITEM_API_BASE = `${API_BASE_URL}/items/`; 
     
     // --- State for User Data ---
     const [userData, setUserData] = useState({ users: [], totalUsers: 0 });
