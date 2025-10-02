@@ -19,6 +19,7 @@ import {GrMap} from 'react-icons/gr'
 
 
 function ItemPage() {
+  const API_BASE_URL = process.env.REACT_APP_API_URL;
   const [item, setItem] = useState(null);
   const [itemDetails, setItemDetails] = useState(null);
   const [show, setShow] = useState(false);
@@ -52,7 +53,7 @@ function ItemPage() {
   
   useEffect(() => {
     axios({
-      url: `http://localhost:4000/items/${item_id}`,
+      url: `${API_BASE_URL}/items/${item_id}`,
       method: "GET",
     })
       .then((response) => {
@@ -326,7 +327,7 @@ function ItemPage() {
   const delete_item = () => {
     console.log("deleted");
     axios({
-      url: `http://localhost:4000/items/delete/${item_id}`,
+      url: `${API_BASE_URL}/items/delete/${item_id}`,
       method: "DELETE",
     })
       .then((response) => {
