@@ -34,6 +34,7 @@ const Paginationn = ({ page, setPage, max }) => {
 };
 
 export default function Feed() {
+  const API_BASE_URL = process.env.REACT_APP_API_URL;
   const getUserId = () => {
     const user = JSON.parse(window.localStorage.getItem('user'));
     return user ? user : null;
@@ -62,10 +63,14 @@ export default function Feed() {
   };
   useEffect(() => {
     // console.log("Test");
-    Axios({
-      url: "http://localhost:4000/items",
-      method: "GET",
-    })
+    if (!API_BASE_URL) {
+        console.error("API URL is not defined. Please check your .env file.");
+        return;
+    }
+    Axios({
+      url: `${API_BASE_URL}/items`,
+      method: "GET",
+    })
       .then((response) => {
         const allitems = response.data.items.reverse();
         const itemsPerPage = 9;
