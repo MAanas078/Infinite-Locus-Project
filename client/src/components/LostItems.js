@@ -34,6 +34,7 @@ const Paginationn = ({ page, setPage, max }) => {
 };
 
 export default function LostItems() {
+  const API_BASE_URL = process.env.REACT_APP_API_URL;
 
   const [user_info, setuser_info] = useState(
     JSON.parse(localStorage.getItem("user"))
@@ -62,8 +63,12 @@ export default function LostItems() {
 
   useEffect(() => {
     
+    if(!API_BASE_URL) {
+        console.error("API URL is not defined. Please check your .env file.");
+        return;
+    }
     Axios({
-      url: "http://localhost:4000/items",
+      url: `${API_BASE_URL}/items`,
       method: "GET",
     })
       .then((response) => {      
