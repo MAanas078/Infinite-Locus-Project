@@ -49,18 +49,22 @@ const createUser = async (req,res) => {
 
         await newUser.save()
         
+       // 1️⃣ Generate OTP once
         const otp = Math.floor(100000+Math.random()*900000).toString();
-        const new_otp = Otp.create({otp:otp,email:newUser.email})
 
-try {
-    
-    await sendOtp(userData.email,otp)
-} catch (error) {
- console.log(error);
-    
-}
+        // 2️⃣ Save OTP in DB and await it
+        await Otp.findOneAndUpdate(
+            { email: newUser.email }, // search existing OTP
+            { otp: otp, email: newUser.email, otpExpires: Date.now() + 15*60*1000 }, // update or create
+            { upsert: true, new: true } // create if not exist
+        );
 
-      
+        // 3️⃣ Send the SAME OTP via email
+        try {
+            await sendOtp(newUser.email, otp)
+        } catch (error) {
+            console.log('SendGrid error:', error);
+        }
         
 
         res.json({id:newUser.id});
