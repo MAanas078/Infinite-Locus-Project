@@ -1,356 +1,178 @@
-import React, { useState } from "react";
-import axios from "axios";
-import { motion } from 'framer-motion'
+import { Formik, Form } from 'formik';
+import * as Yup from 'yup'; // Import Yup for validation
+import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import axios from 'axios';
 import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import {
-  Container,
-  Paper,
-  Grid,
-  Button,
   Typography,
+  Button,
   Stack,
+  Divider,
   TextField,
-  Select,
-  InputLabel,
-  MenuItem,
-  FormHelperText,
-  FormControl,
-  CircularProgress
+  CircularProgress, // Add a spinner for the loading state
 } from '@mui/material';
-import PhotoCamera from '@mui/icons-material/PhotoCamera';
-import { Formik, Form } from 'formik'
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { storage } from '../firebase.js'
-import * as Yup from 'yup';
 
-const LostItem = () => {
+// Yup is the react liberary to handle the validation automatically by creating the shape schema of the object
+// Define a validation schema using Yup
+const LoginSchema = Yup.object().shape({
+  email: Yup.string().email('Invalid email address').required('Email is required'),
+  password: Yup.string().required('Password is required'),
+});
+
+function Login() {
   const API_BASE_URL = process.env.REACT_APP_API_URL;
-  const [loading, setloading] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [image, setImage] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  const usertoken = window.localStorage.getItem("token");
-  const getUserId = () => {
-    const user = JSON.parse(window.localStorage.getItem('user'));
-    return user ? user._id : null;
-  };
+  // Log in function will be called when the form is submitted
+  // values form values 
+  //  setErrors function to set form errors
+    const login = async (values, { setErrors }) => {
+    setLoading(true);
+    try {
+      // Use the environment variable for the API call
+      const response = await axios.post(`${API_BASE_URL}/users/login`, {
+        email: values.email,
+        password: values.password,
+      });
 
-  const config = {
-                headers: { Authorization: `Bearer ${usertoken}` },
-            };
-
-  const schema = Yup.object().shape({
-    name: Yup.string().required('Item name is required'),
-    description: Yup.string().required('Description is required'),
-    type: Yup.string().required('Item type is required'),
-    location: Yup.string().required('Location is required'),
-    date: Yup.string().required('Date is required'),
-    number: Yup.string().required('Phone number is required'),
-  });
-
-  const handleImageUpload = (e) => {
-    if (e.target.files.length > 0) {
-      setImage(e.target.files);
-    }
-  };
-
-  const handleSubmit = async (values, { resetForm }) => {
-    try {
-      await schema.validate(values, { abortEarly: false });
-    } catch (error) {
-      const errorMessages = error.inner.map((err) => err.message);
-      toast.error(errorMessages.join('\n'), {
-        position: "bottom-right",
-        autoClose: 1000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-      });
-      return;
-    }
-
-    if (!image || image.length === 0) {
-      toast.error('Please upload at least one image', {
-        position: "bottom-right",
-        autoClose: 1000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-      });
-      return;
-    }
-
-    setloading(true);
-    const promises = [];
-
-    for (let i = 0; i < image.length; i++) {
-      const img = image[i];
-      const storageRef = ref(storage, `/images/${img.name}`);
-      const uploadTask = uploadBytesResumable(storageRef, img);
-      const promise = new Promise((resolve, reject) => {
-        uploadTask.on('state_changed',
-          (snapshot) => {
-            const uploaded = Math.floor(
-              (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-            );
-            setProgress(uploaded);
-          },
-          (error) => {
-            console.log(error);
-            reject(error);
-          },
-          () => {
-            getDownloadURL(uploadTask.snapshot.ref)
-              .then((imgUrl) => {
-                resolve(imgUrl);
-              })
-              .catch((error) => {
-                console.log(error);
-                reject(error);
-              });
-          }
-        );
-      });
-      promises.push(promise);
-    }
-
-    Promise.all(promises)
-      .then((urls) => {
-        const newItem = { ...values, img: urls, userId: getUserId() };
-        axios.post(`${API_BASE_URL}/Items/newItem`, newItem, config)
-          .then(() => {
-            toast.success('Wohoo 🤩! Item listed successfully.', {
-              position: "bottom-right",
-              autoClose: 1000,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: true,
-              draggable: true,
-              progress: undefined,
-              theme: "light",
-            });
-            setloading(false);
-            resetForm();
-            setImage(null);
-            setProgress(0);
-            window.location.href = "/mylistings";
-          })
-          .catch((error) => {
-            console.log("An error occurred:", error);
-            toast.error('Oops 🙁! Something went wrong.', {
-              position: "bottom-right",
-              autoClose: 1000,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: true,
-              draggable: true,
-              progress: undefined,
-              theme: "light",
-            });
-            setloading(false);
-          });
-      })
-      .catch((error) => {
-        console.log("An error occurred:", error);
-        toast.error('Oops 🙁! Something went wrong.', {
-          position: "bottom-right",
+      if (response.data.user) {
+        toast.success('Logged In Successfully!', {
+          position: 'bottom-right',
           autoClose: 1000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          theme: "light",
         });
-        setloading(false);
+        
+
+        // Store token and user info in localStorage
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+           
+        // Redirect based on user role
+      
+        if (response.data.user.role === 'Admin') {
+          window.location.href = '/admin'; // redirect user to admin page
+        } else {
+          window.location.href = '/'; // otherwise on home page
+        }
+
+      } else {
+        // Handle server-side errors
+        setErrors({ email: 'Incorrect email or password' });
+        toast.error('Oops ! Email or Password is incorrect!', {
+          position: 'bottom-right',
+          autoClose: 1000,
+        });
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      toast.error('Oops ! An error occurred. Please try again.', {
+        position: 'bottom-right',
+        autoClose: 1000,
       });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <Container maxWidth="xl" sx={{ mt: 8, mb: 4 }}>
-      <Grid container spacing={4} alignItems="center" justifyContent="center">
-        {/* Left Section: Form */}
-        <Grid item xs={12} md={6}>
-          <Typography variant="h4" component="h1" align="center" gutterBottom sx={{ fontWeight: 'bold' }}>
-            Post a Lost or Found Item 📢
-          </Typography>
-          <Typography variant="subtitle1" align="center" color="text.secondary" sx={{ mb: 4 }}>
-            Help others by listing your lost item or something you've found.
-          </Typography>
-
-          <Paper elevation={3} sx={{ p: { xs: 3, md: 5 }, borderRadius: 2 }}>
-            <Formik
-              initialValues={{
-                name: '',
-                description: '',
-                type: '',
-                location: '',
-                date: '',
-                number: '',
-              }}
-              validationSchema={schema}
-              onSubmit={handleSubmit}
-            >
-              {({ values, handleChange, errors, touched }) => (
-                <Form>
-                  <Grid container spacing={3}>
-                    {/* Item Details */}
-                    <Grid item xs={12}>
-                      <Typography variant="h6" color="primary.main" gutterBottom>Item Details</Typography>
-                    </Grid>
-                    <Grid item xs={12}>
-                      <TextField
-                        required
-                        fullWidth
-                        id="name"
-                        name="name"
-                        label="Item Name"
-                        value={values.name}
-                        onChange={handleChange}
-                        error={touched.name && !!errors.name}
-                        helperText={touched.name && errors.name}
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <TextField
-                        required
-                        fullWidth
-                        id="description"
-                        name="description"
-                        label="Description"
-                        multiline
-                        rows={4}
-                        value={values.description}
-                        onChange={handleChange}
-                        error={touched.description && !!errors.description}
-                        helperText={touched.description && errors.description}
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <TextField
-                        required
-                        fullWidth
-                        id="location"
-                        name="location"
-                        label="Location (where it was lost/found)"
-                        value={values.location}
-                        onChange={handleChange}
-                        error={touched.location && !!errors.location}
-                        helperText={touched.location && errors.location}
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <TextField
-                        required
-                        fullWidth
-                        id="date"
-                        name="date"
-                        label="Date (e.g., 'Yesterday' or '10/25/2023')"
-                        value={values.date}
-                        onChange={handleChange}
-                        error={touched.date && !!errors.date}
-                        helperText={touched.date && errors.date}
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <TextField
-                        required
-                        fullWidth
-                        id="number"
-                        name="number"
-                        label="Contact Number"
-                        value={values.number}
-                        onChange={handleChange}
-                        error={touched.number && !!errors.number}
-                        helperText={touched.number && errors.number}
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <FormControl fullWidth required error={touched.type && !!errors.type}>
-                        <InputLabel id="type-select-label">Item Type</InputLabel>
-                        <Select
-                          labelId="type-select-label"
-                          id="type"
-                          name="type"
-                          value={values.type}
-                          label="Item Type"
-                          onChange={handleChange}
-                        >
-                          <MenuItem value="Lost">I Lost It</MenuItem>
-                          <MenuItem value="Found">I Found It</MenuItem>
-                        </Select>
-                        <FormHelperText>{touched.type && errors.type}</FormHelperText>
-                      </FormControl>
-                    </Grid>
-                    
-                    {/* Image Upload */}
-                    <Grid item xs={12} sx={{ mt: 2 }}>
-                      <Typography variant="h6" color="primary.main" gutterBottom>Upload Image</Typography>
-                    </Grid>
-                    <Grid item xs={12}>
-                      <Stack direction="row" alignItems="center" spacing={2}>
-                        <Button
-                          variant="contained"
-                          component="label"
-                          startIcon={<PhotoCamera />}
-                          color="primary"
-                          sx={{ py: 1.5 }}
-                        >
-                          Choose File(s)
-                          <input hidden accept="image/*" multiple type="file" onChange={handleImageUpload} />
-                        </Button>
-                        <Typography variant="body2" color="text.secondary">
-                          {image ? `${image.length} file(s) selected` : 'No file chosen'}
-                        </Typography>
-                      </Stack>
-                    </Grid>
-                    
-                    {/* Submit Button */}
-                    <Grid item xs={12} sx={{ mt: 4 }}>
-                      <motion.div whileTap={{ scale: 0.98 }}>
-                        <Button
-                          type="submit"
-                          variant="contained"
-                          color="primary"
-                          fullWidth
-                          size="large"
-                          disabled={loading}
-                        >
-                          {loading ? <CircularProgress size={24} color="inherit" /> : 'Create Post'}
-                        </Button>
-                      </motion.div>
-                    </Grid>
-                  </Grid>
-                </Form>
-              )}
-            </Formik>
-          </Paper>
-        </Grid>
-
-        {/* Right Section: Illustration */}
-        <Grid item xs={12} md={6} sx={{ display: { xs: 'none', md: 'flex' }, justifyContent: 'center' }}>
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            transition={{ duration: 0.4 }}
+    // stack is use to create a flexbox container with direction column by default
+    // stack is the predefined component in mui
+    // h5 is the predefined variant in mui
+    // h5 can styled the ui component in terms of font size font weight and margin
+    <Stack justifyContent="center" alignItems="center" width="100%" pt="10px">
+      <Stack
+        direction="row"
+        width="100%"
+        sx={{ backgroundColor: 'primary.main', height: '125px', alignItems: 'center', justifyContent: 'center' }}
+      >
+        
+        <Stack spacing={0} justifyContent="center" width="100%" maxWidth="1440px" height="125px" ml={10}>
+          <Typography fontSize="20px" color="white" fontWeight="">Log In</Typography>
+          
+          <Typography variant="h5" color="white" fontWeight="bold">Welcome Back!</Typography>
+        </Stack>
+      </Stack>
+      
+      <Stack alignItems="center" justifyContent="space-between" mt={3} direction="row" width="100%" maxWidth="1440px">
+        <Stack width="50%" display={{ xs: 'none', md: 'flex' }}>
+          <img width="100%" src="https://i.ibb.co/G2k63ys/login-1.png" alt="login illustration" />
+        </Stack>
+        <Stack width={{ xs: '100%', md: '400px' }} margin="0 auto" p={{ xs: '1rem', md: 0 }}>
+          
+          <Formik
+            initialValues={{ email: '', password: '' }}
+            validationSchema={LoginSchema} // Add validation schema
+            onSubmit={login}
           >
-            <img
-              width="100%"
-              src="https://i.ibb.co/Q65DB0d/list-item.png"
-              alt="Illustration of a person listing an item"
-              style={{ maxWidth: '450px', height: 'auto' }}
-            />
-          </motion.div>
-        </Grid>
-      </Grid>
-    </Container>
-  );
-};
+              {/* // Formik provides form state and helpers via render props */}
+            {({ values, handleChange, errors, touched }) => (
+              <Form>
+                <Stack alignItems="start" gap="10px">
+                  <Typography variant="h5"><b>Log In</b></Typography>
+                  <Typography fontSize="14px" color="primary.main">Please, fill your information below</Typography>
+                  
+                  <TextField
+                    fullWidth
+                    required
+                    id="email"
+                    type="email"
+                    name="email"
+                    margin="dense"
+                    label="Email"
+                    placeholder="email@example.com"
+                    size="small"
+                    value={values.email}
+                    onChange={handleChange}
+                    error={touched.email && Boolean(errors.email)}
+                    helperText={touched.email && errors.email}
+                  />
 
-export default LostItem;
+                  <TextField
+                    fullWidth
+                    required
+                    id="password"
+                    type="password"
+                    name="password"
+                    margin="dense"// dense is used to reduce the height of the textfield
+                    label="Password"
+                    size="small"
+                    value={values.password}
+                    onChange={handleChange}
+                    error={touched.password && Boolean(errors.password)}
+                    helperText={touched.password && errors.password}
+                  />
+                  
+                  <Stack direction="row-reverse" width="100%" sx={{ justifyContent: { xs: 'center', md: 'end' } }}>
+                    <Button
+                      variant="contained"
+                      type="submit"
+                      sx={{
+                        color: 'white',
+                        textTransform: 'none',
+                        width: '100px',
+                        fontSize: '16px',
+                        mt: 2,
+                      }}
+                      size="small"
+                      disabled={loading} // Disable button while loading
+                      endIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
+                    >
+                      {loading ? 'Logging In...' : 'Login'}
+                    </Button>
+                  </Stack>
+                </Stack>
+              </Form>
+            )}
+          </Formik>
+          <Divider sx={{ width: '100%', margin: '1rem 0' }} />
+          <Stack justifyContent="center" direction="row" gap="10px">
+            <Typography fontSize="16px">Don&apos;t have an account?</Typography> &apos;
+            <Typography component={Link} to="/sign-up" fontSize="16px">Sign Up</Typography>
+          </Stack>
+        </Stack>
+      </Stack>
+    </Stack>
+  );
+}
+
+export default Login;
