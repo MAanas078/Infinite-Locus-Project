@@ -4,6 +4,7 @@ import * as Yup from 'yup';
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import { Link } from 'react-router-dom'
 import axios from "axios";
+
 import { toast } from 'react-toastify';
 // NOTE: Removed external firebase imports (ref, uploadBytesResumable, getDownloadURL, storage)
 // to comply with the single-file mandate and prevent relative import errors.
@@ -26,15 +27,18 @@ import {
 // ==========================================================
 
 // Define a validation schema using Yup for the 6-digit OTP
+// /^\d{6}$/ is a regular expression to match exactly 6 digits
 const OtpSchema = Yup.object().shape({
   otp: Yup.string()
     .matches(/^\d{6}$/, 'OTP must be a 6-digit number')
     .required('OTP is required'),
 });
 
+
+// now design the OTP card
 const OtpCard = ({ user_id, onSubmit }) => {
   const [loading, setLoading] = useState(false);
-  const [resendCooldown, setResendCooldown] = useState(60);
+  const [resendCooldown, setResendCooldown] = useState(60);// cooldown timer in seconds 60
   const [isResendDisabled, setIsResendDisabled] = useState(true);
   const [resendLoading, setResendLoading] = useState(false);
 
@@ -52,25 +56,31 @@ const OtpCard = ({ user_id, onSubmit }) => {
     return () => clearInterval(timer);
   }, [resendCooldown]);
 
+
+  // Handle form submission
+  // values - form values
+  // setSubmitting - formik function to set submitting state
+  // setErrors - formik function to set form errors
   const handleSubmit = async (values, { setSubmitting, setErrors }) => {
-    setLoading(true);
-    setSubmitting(true);
+    setLoading(true);// show the loading spinner
+    setSubmitting(true);// disable the submit button
     try {
-      await onSubmit(values.otp, user_id);
+      await onSubmit(values.otp, user_id);// call the onSubmit prop with otp and user_id
     } catch (error) {
       console.error('OTP submission failed:', error);
       setErrors({ otp: 'Verification failed. Please check the code.' });
     } finally {
-      setLoading(false);
-      setSubmitting(false);
+      setLoading(false);// hide the loading spinner
+      setSubmitting(false);// enable the submit button
     }
   };
 
   const handleResendClick = async () => {
-    // Replace with your actual backend call to resend OTP
+   
     console.log(`Attempting to resend OTP for user ID: ${user_id}`);
     
-    setResendLoading(true);
+    setResendLoading(true);// show loading spinner on resend button
+    
     try {
       // Simulate successful backend resend
       await new Promise(resolve => setTimeout(resolve, 1000)); 
@@ -82,6 +92,7 @@ const OtpCard = ({ user_id, onSubmit }) => {
       toast.error('Failed to resend OTP.', { autoClose: 3000 });
     } finally {
       setResendLoading(false);
+
     }
   };
 
@@ -140,8 +151,11 @@ const OtpCard = ({ user_id, onSubmit }) => {
                         fontWeight: 'bold',
                       } 
                     }}
-                    error={touched.otp && Boolean(errors.otp)}
-                    helperText={touched.otp && errors.otp}
+                  error={touched.otp && Boolean(errors.otp)}// show error state if touched and has error
+                  //if the user touched on the input field and fill the otp otherwise it shows blurr state
+                  // touched is a formik property that indicates if the field has been touched
+                  // errors is a formik property that contains validation errors
+                    helperText={touched.otp && errors.otp}//Displays a small text below the field.
                   />
                 
                 {/* Submit Button */}
@@ -214,6 +228,7 @@ const SignupSchema = Yup.object().shape({
 
 
 function Signup() {
+   const API_BASE_URL = process.env.REACT_APP_API_URL;
     const [loading, setLoading] = useState(false);
     const [image, setImage] = useState(null);
     const [userId, setUserId] = useState(null);
@@ -226,12 +241,12 @@ function Signup() {
 
     // This function handles the OTP verification call
     const verifyOtp = async (otp, user_id) => {
-        setLoading(true);
+        setLoading(true); 
         try {
             const payload = { otp };
             // Using a mock URL for this demo. Replace with your actual endpoint.
             const response = await axios.post(
-                `http://localhost:4000/users/verify-otp/${user_id}`,
+                `${API_BASE_URL}/users/verify-otp/${user_id}`,
                 payload
             );
 
@@ -243,7 +258,7 @@ function Signup() {
                 // In a real app, you might set a cookie/token here, but for this context:
                 setTimeout(() => {
                     window.location.href = "/log-in";
-                }, 1600);
+                }, 1500);
             }
         } catch (error) {
             console.error('OTP verification failed:', error);
@@ -253,7 +268,7 @@ function Signup() {
             });
             throw error; // Re-throw to allow OtpCard to set errors/stop loading
         } finally {
-            setLoading(false);
+            setLoading(false); // hide loading spinner
         }
     };
 
@@ -272,7 +287,8 @@ function Signup() {
                 ? `https://placehold.co/100x100/3f51b5/ffffff?text=${nickname.charAt(0).toUpperCase()}` 
                 : null; 
         };
-
+       
+      // now create account
         const createAccount = async (imgUrl = null) => {
             const payload = { 
                 nickname, 
@@ -284,15 +300,20 @@ function Signup() {
             
             try {
                 // Replace with your actual backend call
-                const response = await axios.post("http://localhost:4000/users/create", payload);
+              const response = await axios.post(`${API_BASE_URL}/users/create`, payload);
+              //if id is present in response data then set the user id
                 
                 if (response.data.id) {
-                    setUserId(response.data.id);
+                    setUserId(response.data.id);// save the id as user id
                     toast.success('Account created! Please enter your OTP sent to your email.', {
                         position: "bottom-right",
                         autoClose: 2500,
                     });
-                } else {
+                  
+                }
+              //if no id in response then it will show error in setErrors state
+                
+                else {
                     // Handle server errors that don't throw an exception (e.g., email already exists)
                     setErrors({ email: response.data.message || 'Signup failed.' });
                     toast.error(response.data.message || 'Something is missing!', {
@@ -300,7 +321,9 @@ function Signup() {
                         autoClose: 3000,
                     });
                 }
-            } catch (error) {
+            }
+            // if API fails then it will catch the error
+            catch (error) {
                 console.error("API Error:", error);
                 setErrors({ email: 'A network error occurred during signup.' });
                 toast.error('An error occurred during signup. Please try again.', {
@@ -309,7 +332,7 @@ function Signup() {
                 });
             } finally {
                 setLoading(false);
-                setSubmitting(false);
+                setSubmitting(false);// enable the submit button again
             }
         };
 
@@ -321,7 +344,7 @@ function Signup() {
         return (
             <OtpCard 
                 user_id={userId}
-                onSubmit={verifyOtp}
+                onSubmit={verifyOtp}// verifyOtp function passed as prop
             />
         );
     }
